@@ -7,6 +7,10 @@ Works for solving captchas when scraping Google, YouTube, and other sites that u
 https://2captcha.com/2captcha-api#solving_recaptchav2_new
 
 ```php
+<?php
+
+use CaptchaSolver\TwoCaptcha;
+
 $captcha = new TwoCaptcha([
     'key' => 'API_KEY_GOES_HERE'
 ]);
@@ -30,6 +34,11 @@ $response = $captcha->solveReCaptchaV2("SITE_KEY", "PAGE_URL", 90);
 
 submit the captcha form given to you with that solution as `g-recaptcha-response` field along with any other relevant form fields, and you are done!
 
+## Installation
+
+```bash
+composer require athlon1600/php-captcha-solver dev-master
+```
 
 ### Misc stuff
 
