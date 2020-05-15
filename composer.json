@@ -1,0 +1,18 @@
+{
+    "name": "athlon1600/php-captcha-solver",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Athlon1600",
+            "email": "Athlon2400@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "CaptchaSolver\\": "src/"
+        }
+    },
+    "require": {
+        "athlon1600/php-curl-client": "^1.0"
+    }
+}
