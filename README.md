@@ -12,7 +12,8 @@ https://2captcha.com/2captcha-api#solving_recaptchav2_new
 use CaptchaSolver\TwoCaptcha;
 
 $captcha = new TwoCaptcha([
-    'key' => 'API_KEY_GOES_HERE'
+    'key' => 'API_KEY_GOES_HERE',
+    'proxy' => null // optional
 ]);
 
 $id = $captcha->sendReCaptchaV2("SITE_KEY", "PAGE_URL");
@@ -39,6 +40,27 @@ submit the captcha form given to you with that solution as `g-recaptcha-response
 ```bash
 composer require athlon1600/php-captcha-solver dev-master
 ```
+
+## Testing
+
+A useful mini web-application can be launched via:
+
+```bash
+php -S localhost:8000 -t public
+```
+
+and then visit:  
+[http://localhost:8000/2captcha.php](http://localhost:8000/2captcha.php)
+
+
+## Known issues
+
+Sometimes solving the captcha will not get you through, and instead you would just get this message at the end:
+
+![](https://i.imgur.com/1aGxvNj.png)
+
+so at this point there is not much else you can do other than not make any requests for a while until Google automatically unblocks your IP address.
+
 
 ### Misc stuff
 
