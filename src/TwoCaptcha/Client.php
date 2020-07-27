@@ -1,8 +1,10 @@
 <?php
 
-namespace CaptchaSolver;
+namespace CaptchaSolver\TwoCaptcha;
 
-class TwoCaptcha extends ApiClient
+use CaptchaSolver\ApiClient;
+
+class Client extends ApiClient
 {
     protected $api_key = '';
     protected $proxy = false;
@@ -11,9 +13,17 @@ class TwoCaptcha extends ApiClient
     {
         parent::__construct();
 
-        // required, but will fail silently
-        $this->api_key = array_key_exists('key', $options) ? $options['key'] : null;
-        $this->proxy = array_key_exists('proxy', $options) ? $options['proxy'] : null;
+        if (is_string($options)) {
+            $this->api_key = $options;
+        } else if (is_array($options)) {
+            $this->api_key = array_key_exists('key', $options) ? $options['key'] : null;
+            $this->proxy = array_key_exists('proxy', $options) ? $options['proxy'] : null;
+        }
+    }
+
+    public function setProxy($proxy)
+    {
+        $this->proxy = $proxy;
     }
 
     public function getBalance()
@@ -32,29 +42,26 @@ class TwoCaptcha extends ApiClient
         return null;
     }
 
-    public function sendReCaptchaV2($site_key, $page_url)
+    public function send(InRequest $params)
     {
-        $request_data = array(
-            'key' => $this->api_key,
-            'method' => 'userrecaptcha',
-            'json' => 1,
-            'pageurl' => $page_url,
-            'googlekey' => $site_key
-        );
+        $params->key = $this->api_key;
+        $params->json = 1;
+
+        if (empty($params->method)) {
+            $params->method = 'userrecaptcha';
+        }
 
         // Are we using a proxy?
         if ($this->proxy) {
-            $request_data['proxy'] = $this->proxy;
-            $request_data['proxy_type'] = 'HTTP';
+            $params->proxy = $this->proxy;
+            $params->proxytype = 'HTTP';
         }
 
-        $response = $this->client->post('http://2captcha.com/in.php', $request_data);
-        $json = json_decode($response->body, true);
-
-        return $json ? $json['request'] : null;
+        $response = $this->client->post('http://2captcha.com/in.php', $params->toArray());
+        return new InResponse($response);
     }
 
-    public function getReCaptchaV2($request_id)
+    public function getResult($request_id)
     {
         $response = $this->client->get('https://2captcha.com/res.php', [
             'key' => $this->api_key,
@@ -63,18 +70,13 @@ class TwoCaptcha extends ApiClient
             'id' => $request_id
         ]);
 
-        $json = json_decode($response->body, true);
-
-        if (isset($json['request']) && $json['request'] != 'CAPCHA_NOT_READY') {
-            return $json['request'];
-        }
-
-        return false;
+        return new ResResponse($response);
     }
 
-    public function solveReCaptchaV2($site_key, $page_url, $timeout = 90)
+    public function solveReCaptchaV2(InRequest $params, $timeout = 90)
     {
-        $request_id = $this->sendReCaptchaV2($site_key, $page_url);
+        $response = $this->send($params);
+        $request_id = $response->getResult();
 
         // Something went wrong! Maybe proxy we are using went offline?
         if (empty($request_id)) {
@@ -90,7 +92,9 @@ class TwoCaptcha extends ApiClient
         do {
 
             sleep($sleep_interval);
-            $solution = $this->getReCaptchaV2($request_id);
+            $solution_response = $this->getResult($request_id);
+
+            $solution = $solution_response->getSolution();
 
             $time_left -= $sleep_interval;
 

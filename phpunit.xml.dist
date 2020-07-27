@@ -1,0 +1,10 @@
+<phpunit bootstrap="./tests/bootstrap.php" colors="true">
+    <testsuites>
+        <testsuite name="Test Suite">
+            <directory>tests/</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <env name="TWO_CAPTCHA_API_KEY" value="" force="false"/>
+    </php>
+</phpunit>

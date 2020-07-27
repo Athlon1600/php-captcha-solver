@@ -4,30 +4,42 @@ Works for solving captchas when scraping Google, YouTube, and other sites that u
 
 ## ReCaptcha V2
 
-https://2captcha.com/2captcha-api#solving_recaptchav2_new
+Official PHP library from 2captcha did not work too well, so this was built.
+
+- https://2captcha.com/2captcha-api#recaptchav2new_post
+- https://2captcha.com/blog/google-search-recaptcha
+- https://2captcha.com/blog/update-google-recaptcha
 
 ```php
 <?php
 
-use CaptchaSolver\TwoCaptcha;
+use CaptchaSolver\TwoCaptcha\Client;
+use CaptchaSolver\TwoCaptcha\InRequest;
 
-$captcha = new TwoCaptcha([
+$captcha = new Client([
     'key' => 'API_KEY_GOES_HERE',
     'proxy' => null // optional
 ]);
 
-$id = $captcha->sendReCaptchaV2("SITE_KEY", "PAGE_URL");
+$request = new InRequest([
+    'googlekey' => '',
+    'pageurl' => ''
+]);
+
+$response = $captcha->send($request);
+$id = $response->getResult();
 
 sleep(45);
 
-$response = $captcha->getReCaptchaV2($id);
+$response = $captcha->getResult($id);
+$solution = $response->getSolution();
 
 // or combine the two calls into one that polls automatically every 5 seconds and times out after 90 seconds:
 
-$response = $captcha->solveReCaptchaV2("SITE_KEY", "PAGE_URL", 90);
+$response = $captcha->solveReCaptchaV2($request, 90);
 ```
 
-`response` should hold a "solution" token that looks something like this:
+`$solution` should now hold a "solution" token that looks something like this:
 
 ```bash
 03AGdBq24bamED8AtWElXZw9ceNn53tjN7fQ76dhyIbS_LS_5xWJuOXUb9ExnYUe_H3lvpKhZMX0Z7qmA-Ia9OBrbOu4eJYh2kosO89ZyTwADK8VrMXmQ8MD3NzaQeDg5jriopB9FrheDo7BemayGgqfJydtsRoJ_hg-RpDhzcwlUgLxJ9w4FwUd-IYBbGaMHp1wP4lbqMOpOaX21_D908LwZZgK2Dgc0TfJBTi_UL8r01sAYcvj2nouFG7JQCfXuj5LIzB8JL0Rxydig11sLayKIRbea66Jd_VkOj8h2xdC4NgDkY9OGkpRE
@@ -38,7 +50,7 @@ submit the captcha form given to you with that solution as `g-recaptcha-response
 ## Installation
 
 ```bash
-composer require athlon1600/php-captcha-solver dev-master
+composer require athlon1600/php-captcha-solver
 ```
 
 ## Testing

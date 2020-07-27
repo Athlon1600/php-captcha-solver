@@ -2,6 +2,12 @@
 
 require("../vendor/autoload.php");
 
+function send_json($data)
+{
+    header('Content-Type: application/json');
+    echo $data;
+}
+
 if (isset($_POST['action'])) {
 
     $action = $_POST['action'];
@@ -9,7 +15,7 @@ if (isset($_POST['action'])) {
 
     $proxy = isset($_POST['proxy']) ? $_POST['proxy'] : null;
 
-    $captcha = new \CaptchaSolver\TwoCaptcha([
+    $captcha = new \CaptchaSolver\TwoCaptcha\Client([
         'key' => $key,
         'proxy' => $proxy
     ]);
@@ -19,13 +25,19 @@ if (isset($_POST['action'])) {
         $googlekey = $_POST['googlekey'];
         $pageurl = $_POST['pageurl'];
 
-        echo $captcha->sendReCaptchaV2($googlekey, $pageurl);
+        $res = $captcha->send(new \CaptchaSolver\TwoCaptcha\InRequest([
+            'googlekey' => $googlekey,
+            'pageurl' => $pageurl
+        ]));
+
+        send_json($res);
 
     } else if ($action == 'get') {
 
         $request_id = $_POST['request_id'];
 
-        echo $captcha->getReCaptchaV2($request_id);
+        $response = $captcha->getResult($request_id);
+        send_json($response);
     }
 
     exit;
@@ -79,14 +91,17 @@ if (isset($_POST['action'])) {
         data['action'] = 'get';
         data['request_id'] = request_id;
 
-        $.post(window.location, data, function (res) {
+        $.post(window.location, data, function (json) {
+
+            var status = json.status;
+            var solution = json.request;
 
             if (++counter < 10) {
 
-                if (res) {
+                if (status) {
                     _log('Captcha solved!');
 
-                    $("#captcha_response").val(res);
+                    $("#captcha_response").val(solution);
                     enable_button(true);
 
                     return;
@@ -140,7 +155,7 @@ if (isset($_POST['action'])) {
 
             $.post(window.location, data, function (res) {
 
-                var id = parseInt(res);
+                var id = res.request;
 
                 if (isNaN(id)) {
                     _log('Error!');
